@@ -47,7 +47,7 @@ class LogisticRegression:
             # replacement is faster than sampling without replacement.              #
             #########################################################################
             random_indices = np.random.choice(num_train, batch_size)
-            X_batch = X[random_indices] 
+            X_batch = X[random_indices]
             y_batch = y[random_indices]
             
             #########################################################################
@@ -74,6 +74,10 @@ class LogisticRegression:
 
         return self
 
+    
+    def sigmoid(z):
+        return 1 / (1 + np.exp(-z)) 
+    
     def predict_proba(self, X, append_bias=False):
         """
         Use the trained weights of this linear classifier to predict probabilities for
@@ -95,8 +99,11 @@ class LogisticRegression:
         # Hint: It might be helpful to use np.vstack and np.sum                   #
         ###########################################################################
         # prob_y1 = 1/(1 + exp(-XB)), где XB = X1B1 + X2B2...XnBn
-        XB_sum = np.sum(X*self.w, axis=1)
-        prob_class_1 = 1/(1 + np.exp(-1*XB_sum))  # (N,)
+        print(X.shape)
+        print(self.w.shape)
+#         prob_class_1 = 1/(1 + np.exp(-1*XB_sum))  # (N,)
+
+        prob_class_1 = self.sigmoid(np.dot(X, self.w))
         prob_class_0 = 1 - prob_class_1
 
         prob_class_1 = prob_class_1.reshape(-1,1) # (N, 1)
@@ -186,8 +193,13 @@ class LogisticRegression:
 
         # Add regularization to the loss and gradient.
         # Note that you have to exclude bias term in regularization.
-
+        theta = np.zeros(X_batch.shape[1])  # Initialize parameter vector
         
+        regularization_term_loss = (lambda_reg / (2 * m)) * np.sum(np.square(theta[1:]))  # excluding bias term
+        regularization_term_grad = (lambda_reg / m) * np.concatenate(([0], theta[1:]))  # excluding bias term
+        
+        loss += regularization_term_loss
+        dw += regularization_term_grad
         
         return loss, dw
 
