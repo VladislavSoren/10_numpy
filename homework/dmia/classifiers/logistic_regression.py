@@ -62,8 +62,9 @@ class LogisticRegression:
             # TODO:                                                                 #
             # Update the weights using the gradient and the learning rate.          #
             #########################################################################
+            self.w -= learning_rate * gradW
 
-
+            
             #########################################################################
             #                       END OF YOUR CODE                                #
             #########################################################################
@@ -79,7 +80,7 @@ class LogisticRegression:
         data points.
 
         Inputs:
-        - X: N x D array of data. Each row is a D-dimensional point. (maybe N = batch size)
+        - X: N x D array of data. Each row is a D-dimensional point. !(maybe N = batch size)!
         - append_bias: bool. Whether to append bias before predicting or not.
 
         Returns:
@@ -95,13 +96,13 @@ class LogisticRegression:
         ###########################################################################
         # prob_y1 = 1/(1 + exp(-XB)), где XB = X1B1 + X2B2...XnBn
         XB_sum = np.sum(X*self.w, axis=1)
-        prob_class_1 = 1/(1 + np.exp(-1*XB_sum))  # ()
+        prob_class_1 = 1/(1 + np.exp(-1*XB_sum))  # (N,)
         prob_class_0 = 1 - prob_class_1
 
-        prob_class_1 = prob_class_1.reshape(-1,1)
+        prob_class_1 = prob_class_1.reshape(-1,1) # (N, 1)
         prob_class_0 = prob_class_0.reshape(-1,1)
 
-        y_proba = np.concatenate((prob_class_0, prob_class_1), axis=1)
+        y_proba = np.concatenate((prob_class_0, prob_class_1), axis=1) # (N, 2)
         
         ###########################################################################
         #                           END OF YOUR CODE                              #
@@ -126,13 +127,34 @@ class LogisticRegression:
         # Implement this method. Store the predicted labels in y_pred.            #
         ###########################################################################
         y_proba = self.predict_proba(X, append_bias=True)
-        y_pred = ...
+        y_pred = y_proba.copy()
+        y_pred[y_pred > 0.5] = 1
+        y_pred[y_pred < 0.5] = 0
+        y_pred = y_pred[:,0] # (N,)
 
         ###########################################################################
         #                           END OF YOUR CODE                              #
         ###########################################################################
         return y_pred
 
+    
+    def get_loss_sum(y, y_pred):
+    
+        # рассчитаем функцию потерь для y = 1, добавив 1e-9, чтобы избежать ошибки при log(0)
+        y_one_loss = y * np.log(y_pred + 1e-9)
+
+        # также рассчитаем функцию потерь для y = 0
+        y_zero_loss = (1 - y) * np.log(1 - y_pred + 1e-9)
+
+        # сложим и разделим на количество наблюдений
+        return -np.sum(y_zero_loss + y_one_loss)
+        
+    
+    
+    def get_gradient_sum(x, y, y_pred, n):
+        return np.dot(x.T, (y_pred - y))
+    
+    
     def loss(self, X_batch, y_batch, reg):
         """Logistic Regression loss function
         Inputs:
@@ -144,22 +166,49 @@ class LogisticRegression:
         - gradient with respect to weights w; an array of same shape as w
         """
         dw = np.zeros_like(self.w)  # initialize the gradient as zero
+        N = X_batch.shape[0]
         loss = 0
         # Compute loss and gradient. Your code should not contain python loops.
         # *Произвести предсказания и подсчитать ошибки
+        
+        y_pred = self.predict(X_batch)
+        
+        loss_sum = get_loss(y_batch, y_pred)
+        
+        gradient_sum = get_gradient(X_batch, y_batch, y_pred, N)
         
 
         # Right now the loss is a sum over all training examples, but we want it
         # to be an average instead so we divide by num_train.
         # Note that the same thing must be done with gradient.
-
+        loss = loss_sum / N
+        dw = gradient_sum / N
 
         # Add regularization to the loss and gradient.
         # Note that you have to exclude bias term in regularization.
 
-
+        
+        
         return loss, dw
 
     @staticmethod
     def append_biases(X):
         return sparse.hstack((X, np.ones(X.shape[0])[:, np.newaxis])).tocsr()
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
