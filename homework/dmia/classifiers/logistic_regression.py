@@ -1,6 +1,6 @@
 import numpy as np
 from scipy import sparse
-
+# from scipy.sparse import exp as sparse_exp
 
 class LogisticRegression:
     def __init__(self):
@@ -74,9 +74,14 @@ class LogisticRegression:
 
         return self
 
+
+    def exp_sparse_matrix(self, matrix):
+        # return np.exp(matrix.data + 1e-9) * matrix 
+        return np.exp(matrix.data) * matrix 
     
-    def sigmoid(z):
-        return 1 / (1 + np.exp(-z)) 
+    # @staticmethod    
+    def sigmoid(self, z):
+        return 1 / (1 + self.exp_sparse_matrix(-z)) 
     
     def predict_proba(self, X, append_bias=False):
         """
@@ -102,8 +107,12 @@ class LogisticRegression:
         print(X.shape)
         print(self.w.shape)
 #         prob_class_1 = 1/(1 + np.exp(-1*XB_sum))  # (N,)
-
-        prob_class_1 = self.sigmoid(np.dot(X, self.w))
+        XW = np.dot(X, self.w)
+        print(type(XW))
+        print(XW.shape)
+        print(XW)
+        print(XW.data)
+        prob_class_1 = self.sigmoid(XW)
         prob_class_0 = 1 - prob_class_1
 
         prob_class_1 = prob_class_1.reshape(-1,1) # (N, 1)
