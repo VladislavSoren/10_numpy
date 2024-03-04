@@ -12,13 +12,12 @@ class LogisticRegression():
 
         num_train, dim = x.shape
 
+        # инициализирует веса
+        if self.w is None:
+            self.w = np.random.randn(dim) * 0.01
+
         # добавит столбец из единиц
         self.append_biases(x)
-
-        # инициализирует веса
-        w, n = np.random.randn(dim) * 0.01, x.shape[0]
-
-        np.random.randn(dim) * 0.01
 
         loss_history = []
 
@@ -30,27 +29,26 @@ class LogisticRegression():
                 y_batch = y[random_indices]
 
                 # метод сделает прогноз с текущими весами
-                y_pred = self.h(X_batch, w)
+                y_pred = self.h(X_batch, self.w)
 
                 # найдет и запишет уровень ошибки
                 loss = self.objective(y_batch, y_pred)
-                regularization_loss = (reg / (2 * n)) * np.sum(np.square(w[1:]))
+                regularization_loss = (reg / (2 * dim)) * np.sum(np.square(self.w[1:]))
                 loss += regularization_loss
                 loss_history.append(loss)
 
                 # рассчитает градиент
-                grad = self.gradient(X_batch, y_batch, y_pred, n)
-                regularization_grad = (reg / n) * w
+                grad = self.gradient(X_batch, y_batch, y_pred, dim)
+                regularization_grad = (reg / dim) * self.w
                 regularization_grad[0] = 0
                 grad += regularization_grad
 
                 # и обновит веса
-                w -= learning_rate * grad
+                self.w -= learning_rate * grad
 
             if verbose and it % 100 == 0:
                 print('iteration %d / %d: loss %f' % (it, num_iters, loss))
 
-        self.w = w
         self.loss_history = loss_history
 
     # метод .predict() делает прогноз с помощью обученной модели
@@ -75,8 +73,8 @@ class LogisticRegression():
         y_zero_loss = (1 - y) * np.log(1 - y_pred + 1e-9)
         return -np.mean(y_zero_loss + y_one_loss)
 
-    def gradient(self, x, y, y_pred, n):
-        return np.dot(x.toarray().T, (y_pred - y)) / n
+    def gradient(self, x, y, y_pred, dim):
+        return np.dot(x.toarray().T, (y_pred - y)) / dim
 
     def stable_sigmoid(self, z):
         if z >= 0:

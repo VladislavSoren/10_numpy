@@ -153,14 +153,25 @@ del X
 
 
 # создадим объект класса LogReg
-model = LogisticRegression()
+clf = LogisticRegression()
 
 # и обучим модель
-model.train(X_train, y_train, num_iters=10)
+# model.train(X_train, y_train, num_iters=10)
+
+
+train_scores = []
+test_scores = []
+num_iters = 10
+
+for i in range(num_iters):
+    clf.train(X_train, y_train, learning_rate=1.0, num_iters=1, batch_size=256, reg=1e-3)
+    train_scores.append(accuracy_score(y_train, clf.predict(X_train)))
+    test_scores.append(accuracy_score(y_test, clf.predict(X_test)))
+
 
 
 # сделаем прогноз on test
-y_pred, probs = model.predict(X_test)
+y_pred, probs = clf.predict(X_test)
 print(accuracy_score(y_test, y_pred))
 pass
 
